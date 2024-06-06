@@ -1,7 +1,4 @@
 from pymoo.algorithms.moo.nsga2 import NSGA2
-#from pymoo.algorithms.soo.nonconvex.de import DE
-#from pymoo.algorithms.moo.nsga3 import NSGA3
-#from pymoo.util.ref_dirs import get_reference_directions
 from pymoo.termination import get_termination
 from pymoo.core.problem import Problem
 import numpy as np
@@ -29,8 +26,6 @@ def find_nearest_indices(a, v):
     idxs[flt] = prev_idxs[flt]
     return idxs
 
-###
-
 class MyProblem(Problem):
     def __init__(self):
         super().__init__(n_var=16,
@@ -42,39 +37,8 @@ class MyProblem(Problem):
     def _evaluate(self, X, out, *args, **kwargs):
         pass  # Evaluation is done externally
 
-###
-
-# Define the Ackley function for external evaluation
-def ackley_function(X):
-    a = 20
-    b = 0.2
-    c = 2 * np.pi
-    d = X.shape[1]
-
-    sum1 = np.sum(X**2, axis=1)
-    sum2 = np.sum(np.cos(c * X), axis=1)
-    
-    term1 = -a * np.exp(-b * np.sqrt(sum1 / d))
-    term2 = -np.exp(sum2 / d)
-    
-    F = term1 + term2 + a + np.exp(1)
-    
-    # Ensure F is a 2D array
-    return F[:, np.newaxis]
-
-
-# Define a custom problem class that pymoo will use
-class MyAckleyProblem(Problem):
-    def __init__(self, n_var=2):
-        super().__init__(n_var=n_var, n_obj=1, n_constr=0, xl=-32.768, xu=32.768)
-
-    def _evaluate(self, X, out, *args, **kwargs):
-        # Evaluation is done externally, so this can be left as pass or a placeholder
-        pass
 
 algorithm = NSGA2(pop_size=300)
-#algorithm = DE(pop_size=2000)
-#algorithm = NSGA3(pop_size=92, ref_dirs=get_reference_directions("das-dennis", 1, n_partitions=12))
 
 termination = get_termination("n_gen", 1000)
 
@@ -87,7 +51,6 @@ def external_evaluate(x, template_fpath, input_data_dpath, observation_fpath_tem
     random_seeds = [1]
 
     p = Parameters.from_file(template_fpath)
-    # XXX check remaining parameters
 
     p['par.randomGeneratorSeedDisabled'] = 0
     p['par.maturityAges'] = [0.3, 0.3, 0.3, 0.8]
@@ -165,7 +128,6 @@ def external_evaluate(x, template_fpath, input_data_dpath, observation_fpath_tem
 def main(template_fpath, input_data_dpath, observation_fpath_template, workdir, keep_input_files):
 
     problem = MyProblem()
-#    problem = MyAckleyProblem()
 
     # create an algorithm object that never terminates
     algorithm.setup(problem, termination=termination)
@@ -195,7 +157,6 @@ def main(template_fpath, input_data_dpath, observation_fpath_template, workdir, 
 
         call_idx += 1
         F = external_evaluate(pop.get("X"), template_fpath, input_data_dpath, observation_fpath_template, workdir, keep_input_files, call_idx, key, plot, df_obs, available_pfts)
-#        F = ackley_function(pop.get("X"))
 
         # replace infinity values
         F[F == inf] = sys.float_info.max/2
